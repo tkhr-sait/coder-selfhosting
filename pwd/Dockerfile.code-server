@@ -1,0 +1,39 @@
+From codercom/code-server:latest
+USER root
+# for japanese
+RUN locale-gen ja_JP.UTF-8
+ENV LC_ALL=ja_JP.UTF-8
+ENV LANG=ja_JP.UTF-8
+ENV TZ=JST-9
+# setup docker
+RUN apt-get update
+RUN apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg-agent \
+    software-properties-common
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+RUN add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+RUN apt-get update
+RUN apt-get install -y docker-ce docker-ce-cli containerd.io
+# additional tools
+RUN apt-get install -y htop chromium-browser fonts-noto-cjk
+RUN apt-get install -y bsdtar
+# docker-compose
+RUN curl -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+RUN chmod +x /usr/local/bin/docker-compose
+# extension
+USER coder
+RUN mkdir -p /home/coder/.local/share/code-server/extensions
+WORKDIR /home/coder/.local/share/code-server/extensions
+RUN curl -JL https://marketplace.visualstudio.com/_apis/public/gallery/publishers/auchenberg/vsextensions/vscode-browser-preview/0.5.9/vspackage | bsdtar -xvf - extension
+RUN mv ./extension /home/coder/.local/share/code-server/extensions/auchenberg.vscode-browser-preview.0.5.9
+RUN curl -JL https://marketplace.visualstudio.com/_apis/public/gallery/publishers/mhutchie/vsextensions/git-graph/1.9.0/vspackage | bsdtar -xvf - extension
+RUN mv ./extension /home/coder/.local/share/code-server/extensions/mhutchie.git-graph.1.9.0
+# projectにvolume設定する場合
+ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=true
+WORKDIR  /home/coder/project

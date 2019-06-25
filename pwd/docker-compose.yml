@@ -1,0 +1,18 @@
+version: "2"
+
+services:
+  docker-dind:
+    image: docker:18-dind
+    privileged: true
+    expose:
+      - 2375
+  code-server:
+    image: tkhr0sait/code-server-custom:latest
+    container_name: code-server
+    command: --allow-http --no-auth --disable-telemetry
+    links:
+      - docker-dind
+    environment:
+      DOCKER_HOST: tcp://docker-dind:2375
+    ports:
+      - "0.0.0.0:8443:8443"
